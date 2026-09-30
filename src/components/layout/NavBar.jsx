@@ -1,47 +1,49 @@
-import React, { useContext, useState } from "react"
-import { NavLink, Link } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { NavLink, Link, useLocation } from "react-router-dom"
 import Logout from "../auth/Logout"
 
 
 const NavBar = () => {
+	const [showNavigation, setShowNavigation] = useState(false)
 	const [showAccount, setShowAccount] = useState(false)
+	const location = useLocation()
 
-	const handleAccountClick = () => {
-		setShowAccount(!showAccount)
-	}
+	useEffect(() => {
+		setShowNavigation(false)
+		setShowAccount(false)
+	}, [location.pathname])
 
-	const isLoggedIn = localStorage.getItem("token")
+	const isLoggedIn = Boolean(localStorage.getItem("token"))
 	const userRole = localStorage.getItem("userRole")
 
 	return (
-		<nav className="navbar navbar-expand-lg bg-body-tertiary px-5 shadow mt-5 sticky-top">
+		<nav className="navbar navbar-expand-lg navbar-light bg-white px-3 px-lg-5 shadow-sm sticky-top">
 			<div className="container-fluid">
-				<Link to={"/"} className="navbar-brand">
-					<span className="hotel-color">lakeSide Hotel</span>
+				<Link to="/" className="navbar-brand">
+					<span className="hotel-color">Lakeside Hotel</span>
 				</Link>
 
 				<button
-					className="navbar-toggler"
+					className={`navbar-toggler ${showNavigation ? "" : "collapsed"}`}
 					type="button"
-					data-bs-toggle="collapse"
-					data-bs-target="#navbarScroll"
+					onClick={() => setShowNavigation((isOpen) => !isOpen)}
 					aria-controls="navbarScroll"
-					aria-expanded="false"
+					aria-expanded={showNavigation}
 					aria-label="Toggle navigation">
 					<span className="navbar-toggler-icon"></span>
 				</button>
 
-				<div className="collapse navbar-collapse" id="navbarScroll">
+				<div className={`collapse navbar-collapse ${showNavigation ? "show" : ""}`} id="navbarScroll">
 					<ul className="navbar-nav me-auto my-2 my-lg-0 navbar-nav-scroll">
 						<li className="nav-item">
-							<NavLink className="nav-link" aria-current="page" to={"/browse-all-rooms"}>
+							<NavLink className="nav-link" aria-current="page" to="/browse-all-rooms" onClick={() => setShowNavigation(false)}>
 								Browse all rooms
 							</NavLink>
 						</li>
 
 						{isLoggedIn && userRole === "ROLE_ADMIN" && (
 							<li className="nav-item">
-								<NavLink className="nav-link" aria-current="page" to={"/admin"}>
+								<NavLink className="nav-link" aria-current="page" to="/admin" onClick={() => setShowNavigation(false)}>
 									Admin
 								</NavLink>
 							</li>
@@ -50,22 +52,19 @@ const NavBar = () => {
 
 					<ul className="d-flex navbar-nav">
 						<li className="nav-item">
-							<NavLink className="nav-link" to={"/find-booking"}>
+							<NavLink className="nav-link" to="/find-booking" onClick={() => setShowNavigation(false)}>
 								Find my booking
 							</NavLink>
 						</li>
 
 						<li className="nav-item dropdown">
-							<a
+							<button
+								type="button"
 								className={`nav-link dropdown-toggle ${showAccount ? "show" : ""}`}
-								href="#"
-								role="button"
-								data-bs-toggle="dropdown"
-								aria-expanded="false"
-								onClick={handleAccountClick}>
-								{" "}
+								aria-expanded={showAccount}
+								onClick={() => setShowAccount((isOpen) => !isOpen)}>
 								Account
-							</a>
+							</button>
 
 							<ul
 								className={`dropdown-menu ${showAccount ? "show" : ""}`}
@@ -74,7 +73,7 @@ const NavBar = () => {
 									<Logout />
 								) : (
 									<li>
-										<Link className="dropdown-item" to={"/login"}>
+										<Link className="dropdown-item" to="/login" onClick={() => setShowAccount(false)}>
 											Login
 										</Link>
 									</li>

@@ -1,14 +1,20 @@
-import React from "react"
 import { Col, Container, Row } from "react-bootstrap"
+import { Link } from "react-router-dom"
 
 const Footer = () => {
-	let today = new Date()
+	const today = new Date()
 	return (
-		<footer className="bg-dark text-light py-3 footer mt-lg-5">
+		<footer className="footer mt-auto">
 			<Container>
-				<Row>
-					<Col xs={12} md={12} className="text-center">
-						<p className="mb-0"> &copy; {today.getFullYear()} lakeSide Hotel</p>
+				<Row className="align-items-center gy-2">
+					<Col xs={12} md={6} className="text-center text-md-start">
+						<p>&copy; {today.getFullYear()} Lakeside Hotel</p>
+					</Col>
+					<Col xs={12} md={6}>
+						<nav className="footer-links" aria-label="Footer navigation">
+							<Link to="/browse-all-rooms">Rooms</Link>
+							<Link to="/find-booking">Find a booking</Link>
+						</nav>
 					</Col>
 				</Row>
 			</Container>

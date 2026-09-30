@@ -15,6 +15,8 @@ module.exports = {
   rules: {
     // "react/jsx-uses-react": "error",   
     // "react/jsx-uses-vars": "error" ,
+    'no-unused-vars': ['error', { varsIgnorePattern: '^React$' }],
+    'react/prop-types': 'off',
     'react-refresh/only-export-components': [
       'warn',
       { allowConstantExport: true },

@@ -1,13 +1,12 @@
 import axios from "axios"
 
 export const api = axios.create({
-	baseURL: "http://localhost:8080"
+	baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:8080"
 })
 
-export const getHeader = () => {
-	const token = localStorage.getItem("token")
+export const getHeader = (token = localStorage.getItem("token")) => {
 	return {
-		Authorization: `Bearer ${token}`,
+		...(token ? { Authorization: `Bearer ${token}` } : {}),
 		"Content-Type": "application/json"
 	}
 }
@@ -134,10 +133,9 @@ export async function cancelBooking(bookingId) {
 
 /* This function gets all availavle rooms from the database with a given date and a room type */
 export async function getAvailableRooms(checkInDate, checkOutDate, roomType) {
-	const result = await api.get(
-		`rooms/available-rooms?checkInDate=${checkInDate}
-		&checkOutDate=${checkOutDate}&roomType=${roomType}`
-	)
+	const result = await api.get("/rooms/available-rooms", {
+		params: { checkInDate, checkOutDate, roomType }
+	})
 	return result
 }
 
@@ -147,7 +145,7 @@ export async function registerUser(registration) {
 		const response = await api.post("/auth/register-user", registration)
 		return response.data
 	} catch (error) {
-		if (error.reeponse && error.response.data) {
+		if (error.response && error.response.data) {
 			throw new Error(error.response.data)
 		} else {
 			throw new Error(`User registration error : ${error.message}`)
@@ -165,21 +163,16 @@ export async function loginUser(login) {
 			return null
 		}
 	} catch (error) {
-		console.error(error)
 		return null
 	}
 }
 
 /*  This is function to get the user profile */
 export async function getUserProfile(userId, token) {
-	try {
-		const response = await api.get(`users/profile/${userId}`, {
-			headers: getHeader()
-		})
-		return response.data
-	} catch (error) {
-		throw error
-	}
+	const response = await api.get(`users/profile/${userId}`, {
+		headers: getHeader(token)
+	})
+	return response.data
 }
 
 /* This isthe function to delete a user */
@@ -190,31 +183,30 @@ export async function deleteUser(userId) {
 		})
 		return response.data
 	} catch (error) {
-		return error.message
+		const responseMessage = error.response?.data
+		if (typeof responseMessage === "string") {
+			throw new Error(responseMessage)
+		}
+		throw new Error(responseMessage?.message || `Error deleting user: ${error.message}`)
 	}
 }
 
 /* This is the function to get a single user */
 export async function getUser(userId, token) {
-	try {
-		const response = await api.get(`/users/${userId}`, {
-			headers: getHeader()
-		})
-		return response.data
-	} catch (error) {
-		throw error
-	}
+	const response = await api.get(`/users/${userId}`, {
+		headers: getHeader(token)
+	})
+	return response.data
 }
 
 /* This is the function to get user bookings by the user id */
 export async function getBookingsByUserId(userId, token) {
 	try {
 		const response = await api.get(`/bookings/user/${userId}/bookings`, {
-			headers: getHeader()
+			headers: getHeader(token)
 		})
 		return response.data
 	} catch (error) {
-		console.error("Error fetching bookings:", error.message)
-		throw new Error("Failed to fetch bookings")
+		throw new Error(`Failed to fetch bookings: ${error.message}`)
 	}
 }

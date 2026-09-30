@@ -2,11 +2,12 @@ import React, { useEffect, useState } from "react"
 import { getAllRooms } from "../utils/ApiFunctions"
 import { Link } from "react-router-dom"
 import { Card, Carousel, Col, Container, Row } from "react-bootstrap"
+import { getRoomImageSrc } from "../utils/roomImages"
 
 const RoomCarousel = () => {
-	const [rooms, setRooms] = useState([{ id: "", roomType: "", roomPrice: "", photo: "" }])
+	const [rooms, setRooms] = useState([])
 	const [errorMessage, setErrorMessage] = useState("")
-	const [isLoading, setIsLoading] = useState(false)
+	const [isLoading, setIsLoading] = useState(true)
 
 	useEffect(() => {
 		setIsLoading(true)
@@ -22,15 +23,23 @@ const RoomCarousel = () => {
 	}, [])
 
 	if (isLoading) {
-		return <div className="mt-5">Loading rooms....</div>
+		return <div className="mt-5" role="status">Loading rooms...</div>
 	}
 	if (errorMessage) {
-		return <div className=" text-danger mb-5 mt-5">Error : {errorMessage}</div>
+		return <div className="alert alert-warning mb-5 mt-5" role="alert">Rooms could not be loaded. {errorMessage}</div>
+	}
+	if (rooms.length === 0) {
+		return (
+			<section className="mb-5 mt-5">
+				<p role="status">No rooms are available to display right now.</p>
+				<Link to="/browse-all-rooms">Browse all rooms</Link>
+			</section>
+		)
 	}
 
 	return (
-		<section className="bg-light mb-5 mt-5 shadow">
-			<Link to={"/browse-all-rooms"} className="hote-color text-center">
+		<section className="mb-5 mt-5">
+			<Link to="/browse-all-rooms" className="hotel-color text-center">
 				Browse all rooms
 			</Link>
 
@@ -41,12 +50,12 @@ const RoomCarousel = () => {
 							<Row>
 								{rooms.slice(index * 4, index * 4 + 4).map((room) => (
 									<Col key={room.id} className="mb-4" xs={12} md={6} lg={3}>
-										<Card>
+										<Card className="room-card">
 											<Link to={`/book-room/${room.id}`}>
 												<Card.Img
 													variant="top"
-													src={`data:image/png;base64, ${room.photo}`}
-													alt="Room Photo"
+													src={getRoomImageSrc(room.photo)}
+													alt={`${room.roomType} room`}
 													className="w-100"
 													style={{ height: "200px" }}
 												/>

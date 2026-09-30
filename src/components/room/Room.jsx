@@ -8,10 +8,10 @@ import RoomPaginator from "../common/RoomPaginator"
 const Room = () => {
 	const [data, setData] = useState([])
 	const [error, setError] = useState(null)
-	const [isLoading, setIsLoading] = useState(false)
+	const [isLoading, setIsLoading] = useState(true)
 	const [currentPage, setCurrentPage] = useState(1)
 	const [roomsPerPage] = useState(6)
-	const [filteredData, setFilteredData] = useState([{ id: "" }])
+	const [filteredData, setFilteredData] = useState([])
 
 	useEffect(() => {
 		setIsLoading(true)
@@ -30,7 +30,7 @@ const Room = () => {
 		return <div>Loading rooms.....</div>
 	}
 	if (error) {
-		return <div className=" text-danger">Error : {error}</div>
+		return <div className="container alert alert-warning" role="alert">Rooms could not be loaded. {error}</div>
 	}
 
 	const handlePageChange = (pageNumber) => {
@@ -55,25 +55,39 @@ const Room = () => {
 				</Col>
 
 				<Col md={6} className="d-flex align-items-center justify-content-end">
-					<RoomPaginator
-						currentPage={currentPage}
-						totalPages={totalPages}
-						onPageChange={handlePageChange}
-					/>
+					{totalPages > 1 && (
+						<RoomPaginator
+							currentPage={currentPage}
+							totalPages={totalPages}
+							onPageChange={handlePageChange}
+						/>
+					)}
 				</Col>
 			</Row>
-
-			<Row>{renderRooms()}</Row>
 
 			<Row>
-				<Col md={6} className="d-flex align-items-center justify-content-end">
-					<RoomPaginator
-						currentPage={currentPage}
-						totalPages={totalPages}
-						onPageChange={handlePageChange}
-					/>
-				</Col>
+				{filteredData.length > 0 ? (
+					renderRooms()
+				) : (
+					<Col>
+						<p className="no-booking-message" role="status">
+							{data.length > 0 ? "No rooms match this filter." : "No rooms are listed yet."}
+						</p>
+					</Col>
+				)}
 			</Row>
+
+			{totalPages > 1 && (
+				<Row>
+					<Col md={6} className="d-flex align-items-center justify-content-end">
+						<RoomPaginator
+							currentPage={currentPage}
+							totalPages={totalPages}
+							onPageChange={handlePageChange}
+						/>
+					</Col>
+				</Row>
+			)}
 		</Container>
 	)
 }

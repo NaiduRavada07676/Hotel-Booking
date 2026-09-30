@@ -2,84 +2,77 @@ import React, { useEffect, useState } from "react"
 import { deleteUser, getBookingsByUserId, getUser } from "../utils/ApiFunctions"
 import { useNavigate } from "react-router-dom"
 import moment from "moment"
+import { FaUserCircle } from "react-icons/fa"
+import { useAuth } from "./useAuth"
 
 const Profile = () => {
-	const [user, setUser] = useState({
-		id: "",
-		email: "",
-		firstName: "",
-		lastName: "",
-		roles: [{ id: "", name: "" }]
-	})
-
-	const [bookings, setBookings] = useState([
-		{
-			id: "",
-			room: { id: "", roomType: "" },
-			checkInDate: "",
-			checkOutDate: "",
-			bookingConfirmationCode: ""
-		}
-	])
-	const [message, setMessage] = useState("")
+	const [user, setUser] = useState(null)
+	const [bookings, setBookings] = useState([])
+	const [isLoading, setIsLoading] = useState(true)
 	const [errorMessage, setErrorMessage] = useState("")
 	const navigate = useNavigate()
+	const { handleLogout } = useAuth()
 
 	const userId = localStorage.getItem("userId")
 	const token = localStorage.getItem("token")
 
 	useEffect(() => {
+		let isMounted = true
 		const fetchUser = async () => {
 			try {
 				const userData = await getUser(userId, token)
-				setUser(userData)
+				if (isMounted) setUser(userData)
 			} catch (error) {
-				console.error(error)
+				if (isMounted) setErrorMessage(error.message)
+			} finally {
+				if (isMounted) setIsLoading(false)
 			}
 		}
 
 		fetchUser()
-	}, [userId])
+		return () => {
+			isMounted = false
+		}
+	}, [userId, token])
 
 	useEffect(() => {
+		let isMounted = true
 		const fetchBookings = async () => {
 			try {
 				const response = await getBookingsByUserId(userId, token)
-				setBookings(response)
+				if (isMounted) setBookings(Array.isArray(response) ? response : [])
 			} catch (error) {
-				console.error("Error fetching bookings:", error.message)
-				setErrorMessage(error.message)
+				if (isMounted) setErrorMessage(error.message)
 			}
 		}
 
 		fetchBookings()
-	}, [userId])
+		return () => {
+			isMounted = false
+		}
+	}, [userId, token])
 
 	const handleDeleteAccount = async () => {
 		const confirmed = window.confirm(
 			"Are you sure you want to delete your account? This action cannot be undone."
 		)
 		if (confirmed) {
-			await deleteUser(userId)
-				.then((response) => {
-					setMessage(response.data)
-					localStorage.removeItem("token")
-					localStorage.removeItem("userId")
-					localStorage.removeItem("userRole")
-					navigate("/")
-					window.location.reload()
-				})
-				.catch((error) => {
-					setErrorMessage(error.data)
-				})
+			try {
+				await deleteUser(userId)
+				handleLogout()
+				navigate("/", { replace: true, state: { message: "Your account has been deleted." } })
+			} catch (error) {
+				setErrorMessage(error.message)
+			}
 		}
 	}
 
 	return (
 		<div className="container">
-			{errorMessage && <p className="text-danger">{errorMessage}</p>}
-			{message && <p className="text-danger">{message}</p>}
-			{user ? (
+			{errorMessage && <p className="alert alert-danger" role="alert">{errorMessage}</p>}
+			{isLoading ? (
+				<p role="status">Loading profile...</p>
+			) : user ? (
 				<div className="card p-5 mt-5" style={{ backgroundColor: "whitesmoke" }}>
 					<h4 className="card-title text-center">User Information</h4>
 					<div className="card-body">
@@ -88,12 +81,7 @@ const Profile = () => {
 								<div className="row g-0">
 									<div className="col-md-2">
 										<div className="d-flex justify-content-center align-items-center mb-4">
-											<img
-												src="https://themindfulaimanifesto.org/wp-content/uploads/2020/09/male-placeholder-image.jpeg"
-												alt="Profile"
-												className="rounded-circle"
-												style={{ width: "150px", height: "150px", objectFit: "cover" }}
-											/>
+											<FaUserCircle size={112} className="text-secondary" aria-hidden="true" />
 										</div>
 									</div>
 
@@ -170,12 +158,10 @@ const Profile = () => {
 												<td>{booking.room.id}</td>
 												<td>{booking.room.roomType}</td>
 												<td>
-													{moment(booking.checkInDate).subtract(1, "month").format("MMM Do, YYYY")}
+													{moment(booking.checkInDate).format("MMM Do, YYYY")}
 												</td>
 												<td>
-													{moment(booking.checkOutDate)
-														.subtract(1, "month")
-														.format("MMM Do, YYYY")}
+													{moment(booking.checkOutDate).format("MMM Do, YYYY")}
 												</td>
 												<td>{booking.bookingConfirmationCode}</td>
 												<td className="text-success">On-going</td>
@@ -198,7 +184,7 @@ const Profile = () => {
 					</div>
 				</div>
 			) : (
-				<p>Loading user data...</p>
+				<p role="status">No user profile could be loaded.</p>
 			)}
 		</div>
 	)

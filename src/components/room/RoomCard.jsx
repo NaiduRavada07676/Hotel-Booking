@@ -1,17 +1,18 @@
 import React from "react";
 import { Card, Col } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { getRoomImageSrc } from "../utils/roomImages";
 
 const RoomCard = ({ room }) => {
   return (
     <Col key={room.id} className="mb-4" xs={12} md={6} lg={4}>
       <Card className="room-card">
-        <div className="room-img">
+        <div className="room-image">
           <Link to={`/book-room/${room.id}`}>
             <Card.Img
               variant="top"
-              src={`data:image/png;base64, ${room.photo}`}
-              alt="Room Photo"
+              src={getRoomImageSrc(room.photo)}
+              alt={`${room.roomType || "Hotel"} room`}
             />
           </Link>
         </div>

@@ -14,7 +14,6 @@ const ExistingRooms = () => {
   const [filteredRooms, setFilteredRooms] = useState([
     { id: "", roomType: "", roomPrice: "" },
   ]);
-  const [selectedRoomType, setSelectedRoomType] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -35,16 +34,9 @@ const ExistingRooms = () => {
   };
 
   useEffect(() => {
-    if (selectedRoomType === "") {
-      setFilteredRooms(rooms);
-    } else {
-      const filteredRooms = rooms.filter(
-        (room) => room.roomType === selectedRoomType
-      );
-      setFilteredRooms(filteredRooms);
-    }
+    setFilteredRooms(rooms);
     setCurrentPage(1);
-  }, [rooms, selectedRoomType]);
+  }, [rooms]);
 
   const handlePaginationClick = (pageNumber) => {
     setCurrentPage(pageNumber);

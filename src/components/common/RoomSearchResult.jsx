@@ -41,7 +41,12 @@ const RoomSearchResults = ({ results, onClearSearch }) => {
 					</Row>
 				</>
 			) : (
-				<p></p>
+				<div className="search-empty-state text-center py-4">
+					<p className="mb-3">No rooms match these dates and room type.</p>
+					<Button variant="outline-secondary" onClick={onClearSearch}>
+						Change search
+					</Button>
+				</div>
 			)}
 		</>
 	)

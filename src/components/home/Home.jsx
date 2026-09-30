@@ -1,11 +1,9 @@
-import React, { useContext } from "react"
 import MainHeader from "../layout/MainHeader"
 import HotelService from "../common/HotelService"
 import Parallax from "../common/Parallax"
 import RoomCarousel from "../common/RoomCarousel"
 import RoomSearch from "../common/RoomSearch"
 import { useLocation } from "react-router-dom"
-import { useAuth } from "../auth/AuthProvider"
 const Home = () => {
 	const location = useLocation()
 
@@ -22,10 +20,7 @@ const Home = () => {
 				<RoomSearch />
 				<RoomCarousel />
 				<Parallax />
-				<RoomCarousel />
 				<HotelService />
-				<Parallax />
-				<RoomCarousel />
 			</div>
 		</section>
 	)

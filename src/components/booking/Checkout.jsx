@@ -12,6 +12,7 @@ import {
 
 import { useParams } from "react-router-dom"
 import { getRoomById } from "../utils/ApiFunctions"
+import { getRoomImageSrc } from "../utils/roomImages"
 import RoomCarousel from "../common/RoomCarousel"
 
 const Checkout = () => {
@@ -26,17 +27,21 @@ const Checkout = () => {
 	const { roomId } = useParams()
 
 	useEffect(() => {
-		setTimeout(() => {
-			getRoomById(roomId)
-				.then((response) => {
-					setRoomInfo(response)
-					setIsLoading(false)
-				})
-				.catch((error) => {
-					setError(error)
-					setIsLoading(false)
-				})
-		}, 1000)
+		let isMounted = true
+		setIsLoading(true)
+		getRoomById(roomId)
+			.then((response) => {
+				if (isMounted) setRoomInfo(response)
+			})
+			.catch((requestError) => {
+				if (isMounted) setError(requestError)
+			})
+			.finally(() => {
+				if (isMounted) setIsLoading(false)
+			})
+		return () => {
+			isMounted = false
+		}
 	}, [roomId])
 
 	return (
@@ -45,14 +50,14 @@ const Checkout = () => {
 				<div className="row">
 					<div className="col-md-4 mt-5 mb-5">
 						{isLoading ? (
-							<p>Loading room information...</p>
+							<p role="status">Loading room information...</p>
 						) : error ? (
-							<p>{error}</p>
+							<p className="alert alert-danger" role="alert">{error.message || "Unable to load this room."}</p>
 						) : (
 							<div className="room-info">
 								<img
-									src={`data:image/png;base64,${roomInfo.photo}`}
-									alt="Room photo"
+									src={getRoomImageSrc(roomInfo.photo)}
+									alt={`${roomInfo.roomType || "Hotel"} room`}
 									style={{ width: "100%", height: "200px" }}
 								/>
 								<table className="table table-bordered">
@@ -98,9 +103,11 @@ const Checkout = () => {
 							</div>
 						)}
 					</div>
-					<div className="col-md-8">
-						<BookingForm />
-					</div>
+					{!isLoading && !error && (
+						<div className="col-md-8">
+							<BookingForm />
+						</div>
+					)}
 				</div>
 			</section>
 			<div className="container">

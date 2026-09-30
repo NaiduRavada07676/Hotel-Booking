@@ -13,10 +13,10 @@ const RoomSearch = () => {
 	})
 
 	const [errorMessage, setErrorMessage] = useState("")
-	const [availableRooms, setAvailableRooms] = useState([])
+	const [availableRooms, setAvailableRooms] = useState(null)
 	const [isLoading, setIsLoading] = useState(false)
 
-	const handleSearch = (e) => {
+	const handleSearch = async (e) => {
 		e.preventDefault()
 		const checkInMoment = moment(searchQuery.checkInDate)
 		const checkOutMoment = moment(searchQuery.checkOutDate)
@@ -24,32 +24,32 @@ const RoomSearch = () => {
 			setErrorMessage("Please enter valid dates")
 			return
 		}
-		if (!checkOutMoment.isSameOrAfter(checkInMoment)) {
+		if (!checkOutMoment.isAfter(checkInMoment, "day")) {
 			setErrorMessage("Check-out date must be after check-in date")
 			return
 		}
+		setErrorMessage("")
 		setIsLoading(true)
-		getAvailableRooms(searchQuery.checkInDate, searchQuery.checkOutDate, searchQuery.roomType)
-			.then((response) => {
-				setAvailableRooms(response.data)
-				setTimeout(() => setIsLoading(false), 2000)
-			})
-			.catch((error) => {
-				console.log(error)
-			})
-			.finally(() => {
-				setIsLoading(false)
-			})
+		try {
+			const response = await getAvailableRooms(
+				searchQuery.checkInDate,
+				searchQuery.checkOutDate,
+				searchQuery.roomType
+			)
+			setAvailableRooms(response.data || [])
+		} catch {
+			setAvailableRooms(null)
+			setErrorMessage("We could not search for rooms. Check your connection and try again.")
+		} finally {
+			setIsLoading(false)
+		}
 	}
 
 	const handleInputChange = (e) => {
 		const { name, value } = e.target
-		setSearchQuery({ ...searchQuery, [name]: value })
-		const checkInDate = moment(searchQuery.checkInDate)
-		const checkOutDate = moment(searchQuery.checkOutDate)
-		if (checkInDate.isValid() && checkOutDate.isValid()) {
-			setErrorMessage("")
-		}
+		setSearchQuery((currentQuery) => ({ ...currentQuery, [name]: value }))
+		setErrorMessage("")
+		setAvailableRooms(null)
 	}
 	const handleClearSearch = () => {
 		setSearchQuery({
@@ -57,7 +57,7 @@ const RoomSearch = () => {
 			checkOutDate: "",
 			roomType: ""
 		})
-		setAvailableRooms([])
+		setAvailableRooms(null)
 	}
 
 	return (
@@ -73,6 +73,7 @@ const RoomSearch = () => {
 									name="checkInDate"
 									value={searchQuery.checkInDate}
 									onChange={handleInputChange}
+									required
 									min={moment().format("YYYY-MM-DD")}
 								/>
 							</Form.Group>
@@ -85,7 +86,8 @@ const RoomSearch = () => {
 									name="checkOutDate"
 									value={searchQuery.checkOutDate}
 									onChange={handleInputChange}
-									min={moment().format("YYYY-MM-DD")}
+									required
+									min={searchQuery.checkInDate || moment().add(1, "day").format("YYYY-MM-DD")}
 								/>
 							</Form.Group>
 						</Col>
@@ -97,8 +99,8 @@ const RoomSearch = () => {
 										handleRoomInputChange={handleInputChange}
 										newRoom={searchQuery}
 									/>
-									<Button variant="secondary" type="submit" className="ml-2">
-										Search
+									<Button variant="secondary" type="submit" className="ms-2" disabled={isLoading}>
+										{isLoading ? "Searching..." : "Search rooms"}
 									</Button>
 								</div>
 							</Form.Group>
@@ -106,14 +108,11 @@ const RoomSearch = () => {
 					</Row>
 				</Form>
 
-				{isLoading ? (
-					<p className="mt-4">Finding availble rooms....</p>
-				) : availableRooms ? (
+				{isLoading && <p className="mt-4" role="status">Searching available rooms...</p>}
+				{availableRooms !== null && !isLoading && (
 					<RoomSearchResults results={availableRooms} onClearSearch={handleClearSearch} />
-				) : (
-					<p className="mt-4">No rooms available for the selected dates and room type.</p>
 				)}
-				{errorMessage && <p className="text-danger">{errorMessage}</p>}
+				{errorMessage && <p className="text-danger mt-3" role="alert">{errorMessage}</p>}
 			</Container>
 		</>
 	)
